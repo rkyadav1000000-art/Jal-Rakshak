@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Pollution - JalRakshak</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>💧 JalRakshak</h1>
+                <p>Clean Water, Healthy Life</p>
+            </div>
+
+            <nav class="main-nav">
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'water_quality' %}">Water Quality</a>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'report_pollution' %}">Report Pollution</a>
+                <a href="{% url 'home' %}#safety">Prevention</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Report Pollution -->
+    <section id="report" class="section">
+
+        <div class="section-heading">
+            <span>RAISE YOUR VOICE</span>
+            <h2>Report Water Pollution</h2>
+            <p>Help authorities identify water pollution in your area.</p>
+        </div>
+
+        <div class="form-card">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="message {{ message.tags }}">
+                        {{ message }}
+                    </p>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <label>Problem Title</label>
+                <input type="text" name="title"
+                       placeholder="Enter problem title" required>
+
+                <label>Incident Location</label>
+                <input type="text" name="location"
+                       placeholder="Enter village or location" required>
+
+                <label>Problem Category</label>
+                <select name="category" required>
+                    <option value="">Select Category</option>
+                    <option value="water_contamination">
+                        Drinking Water Pollution
+                    </option>
+                    <option value="waterlogging">Waterlogging</option>
+                    <option value="river_pond_pollution">
+                        River or Pond Pollution
+                    </option>
+                    <option value="other">Other</option>
+                </select>
+
+                <label>Problem Description</label>
+                <textarea name="description"
+                          placeholder="Describe the pollution problem"
+                          required></textarea>
+
+                <label>Upload Photo (Optional)</label>
+                <input type="file" name="photo" accept="image/*">
+
+                <button type="submit" class="btn primary-btn">
+                    Submit Report
+                </button>
+            </form>
+        </div>
+    </section>
+
+</body>
+</html>

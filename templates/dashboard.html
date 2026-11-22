@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JalRakshak Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f7f8;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #087e8b;
+            text-align: center;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 900px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #ccc;
+        }
+
+        .card h2 {
+            font-size: 32px;
+        }
+
+        .total { color: blue; }
+        .pending { color: orange; }
+        .resolved { color: green; }
+        .high { color: red; }
+
+        .main-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .main-nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+    <div class="nav-container">
+        <div class="logo">
+            <h1>💧 JalRakshak</h1>
+            <p>Clean Water, Healthy Life</p>
+        </div>
+
+        <nav class="main-nav">
+            <a href="/">Home</a>
+            <a href="/water-quality/">Water Quality</a>
+            <a href="/dashboard/">Dashboard</a>
+            <a href="/report-pollution/">Report Pollution</a>
+            <a href="/#safety">Prevention</a>
+        </nav>
+    </div>
+</header>
+
+    <h1>JalRakshak Authority Dashboard</h1>
+
+    <div class="dashboard">
+        <div class="card">
+            <h2 class="total">{{ total_reports }}</h2>
+            <p>Total Reports</p>
+        </div>
+
+        <div class="card">
+            <h2 class="pending">{{ pending_reports }}</h2>
+            <p>Pending Reports</p>
+        </div>
+
+        <div class="card">
+            <h2 class="resolved">{{ resolved_reports }}</h2>
+            <p>Resolved Reports</p>
+        </div>
+
+        <div class="card">
+            <h2 class="high">{{ high_priority_reports }}</h2>
+            <p>High Priority Reports</p>
+        </div>
+    </div>
+
+    <hr>
+
+    {% if high_priority_reports > 0 %}
+    <div style="background:#ffe0e0; color:#b00020; padding:15px; margin:20px 0; border:1px solid red; border-radius:8px;">
+        <strong>⚠️ HIGH PRIORITY ALERT!</strong>
+        {{ high_priority_reports }} pending high priority reports need attention.
+    </div>
+    {% else %}
+    <p style="color:green;">No pending high priority reports.</p>
+    {% endif %}
+
+    <h2>All Pollution Reports</h2>
+
+    <form method="GET" style="background:white; padding:20px; border-radius:10px; margin:20px 0;">
+
+        <input type="text" name="search"
+               placeholder="Search by title or location"
+               value="{{ search }}"
+               style="padding:10px; width:220px;">
+
+        <select name="category" style="padding:10px;">
+            <option value="">All Categories</option>
+            {% for value, label in category_choices %}
+            <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>
+                {{ label }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="status" style="padding:10px;">
+            <option value="">All Status</option>
+            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="resolved" {% if selected_status == 'resolved' %}selected{% endif %}>Resolved</option>
+        </select>
+
+        <select name="priority" style="padding:10px;">
+            <option value="">All Priorities</option>
+            <option value="high" {% if selected_priority == 'high' %}selected{% endif %}>High Priority</option>
+            <option value="medium" {% if selected_priority == 'medium' %}selected{% endif %}>Medium Priority</option>
+            <option value="low" {% if selected_priority == 'low' %}selected{% endif %}>Low Priority</option>
+        </select>
+
+        <button type="submit" style="padding:10px 20px; background:#087e8b; color:white; border:none; border-radius:5px; cursor:pointer;">
+            Search
+        </button>
+    </form>
+
+    {% for report in reports %}
+    <div class="card" style="margin:20px auto; text-align:left; max-width:900px;
+        {% if report.category == 'waterlogging' and not report.is_resolved %}
+        border:3px solid red; background:#fff0f0;
+        {% endif %}">
+
+        <h3>{{ report.title }}</h3>
+
+        {% if report.category == 'waterlogging' and not report.is_resolved %}
+        <p style="color:red; font-weight:bold;">
+            ⚠️ HIGH PRIORITY - IMMEDIATE ATTENTION REQUIRED
+        </p>
+        {% endif %}
+
+        <p><strong>Location:</strong> {{ report.location }}</p>
+        <p><strong>Category:</strong> {{ report.get_category_display }}</p>
+
+        <p><strong>Priority:</strong>
+            {% if report.category == 'waterlogging' %}
+                HIGH
+            {% elif report.category == 'water_contamination' %}
+                MEDIUM
+            {% elif report.category == 'river_pond_pollution' %}
+                NORMAL
+            {% else %}
+                LOW
+            {% endif %}
+        </p>
+
+        <p><strong>Description:</strong> {{ report.description }}</p>
+
+        {% if report.photo %}
+        <img src="{{ report.photo.url }}" alt="Pollution photo" width="200">
+        {% endif %}
+
+        <p><strong>Status:</strong>
+            {% if report.is_resolved %}Resolved{% else %}Pending{% endif %}
+        </p>
+
+        {% if not report.is_resolved %}
+        <form method="POST" action="{% url 'resolve_report' report.id %}">
+            {% csrf_token %}
+            <button type="submit" style="background:green; color:white; padding:10px 15px; border:none; border-radius:5px; cursor:pointer;">
+                Mark as Resolved
+            </button>
+        </form>
+        {% else %}
+        <p style="color:green; font-weight:bold;">✓ This Report is Resolved</p>
+        {% endif %}
+    </div>
+
+    {% empty %}
+    <p>No pollution reports available.</p>
+    {% endfor %}
+
+</body>
+</html>

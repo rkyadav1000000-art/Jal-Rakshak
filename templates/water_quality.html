@@ -1,0 +1,361 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Water Quality Checker - JalRakshak</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <header class="header">
+    <div class="nav-container">
+
+        <div class="logo">
+            <h1>💧 JalRakshak</h1>
+            <p>Clean Water, Healthy Life</p>
+        </div>
+
+        <nav class="main-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'water_quality' %}">Water Quality</a>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'home' %}#report">Report Pollution</a>
+            <a href="{% url 'home' %}#safety">Prevention</a>
+            <a href="{% url 'report_pollution' %}">Report Pollution</a>
+        </nav>
+
+    </div>
+</header>
+    <div class="water-report">
+
+    <h1>JalRakshak Water Quality Checker</h1>
+
+    <p>Check drinking water quality in your area.</p>
+
+    <h2>Select Water Source</h2>
+
+<form method="GET">
+
+    <label>Water Source:</label>
+
+    <select name="source" required onchange="this.form.submit()">
+    <option value="">Select Source</option>
+    <option value="groundwater"
+        {% if source == 'groundwater' %}selected{% endif %}>
+        Groundwater
+    </option>
+    <option value="tap_water"
+        {% if source == 'tap_water' %}selected{% endif %}>
+        Tap Water
+    </option>
+    </select>
+
+    <br><br>
+
+<label>State:</label>
+<select name="state" required>
+    <option value="">Select State</option>
+    <option value="Uttar Pradesh">Uttar Pradesh</option>
+</select>
+
+<br><br>
+
+<label>District:</label>
+<select name="district">
+    <option value="">Select District</option>
+    {% for item in district_options %}
+        <option value="{{ item }}"
+            {% if district == item %}selected{% endif %}>
+            {{ item }}
+        </option>
+    {% endfor %}
+</select>
+<br><br>
+
+<label>Block / Tehsil:</label>
+<input type="text" name="block"
+       placeholder="Enter Block or Tehsil">
+
+<br><br>
+
+<label>Village / City:</label>
+<input type="text" name="village"
+       placeholder="Enter Village or City" required>
+
+<br><br>
+
+<button type="submit"> Search Water Quality </button>
+
+</form>
+
+{% if request.GET.source %}
+
+    <h2>Selected Location Details</h2>
+
+    <p>Water Source: {{ source }}</p>
+    <p>State: {{ state }}</p>
+    <p>District: {{ district }}</p>
+    <p>Block / Tehsil: {{ block }}</p>
+    <p>Village / City: {{ village }}</p>
+
+{% endif %}
+
+{% if source == 'groundwater' and district %}
+
+    <div class="water-report">
+
+        <h2>JalRakshak Water Quality Report</h2>
+
+        <p>
+            <strong>Location:</strong>
+            {{ village }}, {{ block }}, {{ district }}, {{ state }}
+        </p>
+
+        <div class="overall-status {{ overall_class }}">
+            <h3>Overall Water Quality</h3>
+            <h2>{{ overall_status }}</h2>
+            <p>
+                Assessment is based on available historical
+                parameter readings, not a current safety certificate.
+            </p>
+        </div>
+
+        <h3>Water Quality Parameters</h3>
+
+        {% if parameter_checks %}
+
+        <table class="quality-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>Reference Limit</th>
+                <th>Testing Date</th>
+                <th>Status</th>
+            </tr>
+
+            {% for item in parameter_checks %}
+
+            <tr class="{% if item.status == 'Danger' %}danger-row{% elif item.status == 'Warning' %}warning-row{% endif %}">
+                <td>{{ item.name }}</td>
+
+                <td>
+                    {% if item.value != None %}
+                        {{ item.value }} {{ item.unit }}
+                    {% else %}
+                        Not Available
+                    {% endif %}
+                </td>
+
+                <td>{{ item.limit }}</td>
+
+                <td>{{ item.date }}</td>
+
+                <td>
+                    {% if item.status == 'Danger' %}
+                        <strong>🔴 DANGER</strong>
+                    {% elif item.status == 'Warning' %}
+                        <strong>🟠 WARNING</strong>
+                    {% elif item.status == 'Within limit' %}
+                        <strong>🟢 Within Limit</strong>
+                    {% else %}
+                        Not Available
+                    {% endif %}
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+        {% else %}
+            <p>No parameter data available.</p>
+        {% endif %}
+
+        <p>
+            <strong>Historical Records Found:</strong>
+            {{ total_records }}
+        </p>
+
+    </div>
+
+{% endif %}
+
+{% if source == 'tap_water' and district %}
+
+<div class="water-report">
+
+    <h2>Tap Water Quality Report</h2>
+
+    {% if tap_report %}
+
+        <p><strong>Village:</strong> {{ tap_report.village }}</p>
+        <p><strong>District:</strong> {{ tap_report.district }}</p>
+        <p><strong>Sample Date:</strong> {{ tap_report.sample_date|default:"Not Available" }}</p>
+        <p><strong>Testing Lab:</strong> {{ tap_report.lab_name|default:"Not Available" }}</p>
+
+        <div class="overall-status {{ tap_class }}">
+            Drinking Water Status: {{ tap_status }}
+        </div>
+
+        {% if tap_alerts %}
+            <h3>Water Quality Alerts</h3>
+            <ul>
+                {% for alert in tap_alerts %}
+                    <li>{{ alert }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h3>Parameter-wise Results</h3>
+
+        <table class="quality-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>Status</th>
+            </tr>
+
+            {% for item in tap_parameter_checks %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.value|default:"Not Available" }}</td>
+                <td>{{ item.status }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+    <td>E. coli</td>
+    <td>
+        {% if tap_report.e_coli_detected == True %}
+            Detected
+        {% elif tap_report.e_coli_detected == False %}
+            Not Detected
+        {% else %}
+            Not Tested
+        {% endif %}
+    </td>
+    <td>
+        {% if tap_report.e_coli_detected == True %}
+            🔴 Danger
+        {% elif tap_report.e_coli_detected == False %}
+            🟢 Not Detected
+        {% else %}
+            Not Available
+        {% endif %}
+    </td>
+</tr>
+
+<tr>
+    <td>Total Coliform</td>
+    <td>
+        {% if tap_report.total_coliform_detected == True %}
+            Detected
+        {% elif tap_report.total_coliform_detected == False %}
+            Not Detected
+        {% else %}
+            Not Tested
+        {% endif %}
+    </td>
+    <td>
+        {% if tap_report.total_coliform_detected == True %}
+            🔴 Danger
+        {% elif tap_report.total_coliform_detected == False %}
+            🟢 Not Detected
+        {% else %}
+            Not Available
+        {% endif %}
+    </td>
+</tr>
+        </table>
+
+        {% if tap_report.source_url %}
+            <p>
+                <a href="{{ tap_report.source_url }}" target="_blank" rel="noopener">
+                    View Government Source
+                </a>
+            </p>
+        {% endif %}
+
+    {% else %}
+
+        <div class="overall-status neutral">
+            Government test data is not available for this location.
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<style>
+.water-report {
+    margin-top: 25px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+}
+
+.overall-status {
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.overall-status.danger {
+    background: #ffe0e0;
+    border: 2px solid red;
+    color: #b00000;
+}
+
+.overall-status.warning {
+    background: #fff0d0;
+    border: 2px solid orange;
+    color: #995500;
+}
+
+.overall-status.good {
+    background: #e0f5e5;
+    border: 2px solid green;
+    color: #176b2c;
+}
+
+.overall-status.neutral {
+    background: #eeeeee;
+    border: 2px solid gray;
+    color: #444444;
+}
+
+.quality-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.quality-table th,
+.quality-table td {
+    border: 1px solid #cccccc;
+    padding: 12px;
+    text-align: left;
+}
+
+.quality-table th {
+    background: #087e8b;
+    color: white;
+}
+
+.danger-row {
+    background: #ffe0e0;
+    color: #b00000;
+}
+
+.warning-row {
+    background: #fff0d0;
+    color: #995500;
+}
+</style>
+
+</div>
+
+</body>
+
+</html>

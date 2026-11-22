@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JalRakshak | Water Monitoring System</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>💧 JalRakshak</h1>
+                <p>Clean Water, Healthy Life</p>
+            </div>
+
+            <nav class="main-nav">
+            <a href="/">Home</a>
+            <a href="/water-quality/">Water Quality</a>
+            <a href="/dashboard/">Dashboard</a>
+            <a href="/report-pollution/">Report Pollution</a>
+            <a href="/#safety">Prevention</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="tagline">WATER QUALITY & POLLUTION MONITORING</span>
+            <h2>Protect Your Water,<br>Protect Your Future.</h2>
+            <p>
+                Check drinking water quality and report pollution
+                problems in your village.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="{% url 'water_quality' %}" class="btn primary-btn">Check Water</a>
+                <a href="{% url 'report_pollution' %}" class="btn primary-btn">Report Pollution</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Problems -->
+    <section id="problems" class="section light-section">
+        <div class="section-heading">
+            <span>LOCAL WATER ISSUES</span>
+            <h2>Top Water Problems</h2>
+            <p>Major water pollution issues that need attention.</p>
+        </div>
+
+        <div class="problem-grid">
+            <div class="problem-card high">
+                <div class="problem-icon">⚠️</div>
+                <h3>Drinking Water Contamination</h3>
+                <p>Contaminated water can affect public health.</p>
+                <span>HIGH PRIORITY</span>
+            </div>
+
+            <div class="problem-card medium">
+                <div class="problem-icon">🌊</div>
+                <h3>Waterlogging</h3>
+                <p>Stagnant water can create sanitation problems.</p>
+                <span>MEDIUM PRIORITY</span>
+            </div>
+
+            <div class="problem-card normal">
+                <div class="problem-icon">🏞️</div>
+                <h3>River and Pond Pollution</h3>
+                <p>Waste and sewage can pollute natural water sources.</p>
+                <span>NORMAL PRIORITY</span>
+            </div>
+        </div>
+
+        <p class="note">
+            Community reports are used to identify and prioritize problems.
+        </p>
+    </section>
+
+   
+    <!-- Public Reports -->
+    <section id="public-reports" class="section light-section">
+        <div class="section-heading">
+            <span>COMMUNITY UPDATES</span>
+            <h2>Recent Pollution Reports</h2>
+            <p>View pollution reports submitted by citizens.</p>
+        </div>
+
+        <p>Alert Count: {{ high_priority_count }}</p>
+        {% if high_priority_count > 0 %}
+            <div class="alert-box">
+                <h3>⚠️ HIGH PRIORITY ALERT</h3>
+                <p>
+                    {{ high_priority_count }} unresolved high-priority
+                    reports need attention.
+                </p>
+            </div>
+        {% endif %}
+
+        <div class="reports-container">
+            {% for report in reports %}
+
+                <div class="report-card
+                    {% if report.category == 'waterlogging' and not report.is_resolved %}
+                        high-priority
+                    {% endif %}">
+
+                    <h3>{{ report.title }}</h3>
+
+                    {% if report.category == 'waterlogging' %}
+                        <span class="priority high-label">HIGH PRIORITY</span>
+                    {% elif report.category == 'water_contamination' %}
+                        <span class="priority medium-label">MEDIUM PRIORITY</span>
+                    {% elif report.category == 'river_pond_pollution' %}
+                        <span class="priority normal-label">NORMAL PRIORITY</span>
+                    {% else %}
+                        <span class="priority low-label">LOW PRIORITY</span>
+                    {% endif %}
+
+                    <p><strong>Location:</strong> {{ report.location }}</p>
+
+                    <p>
+                        <strong>Category:</strong>
+                        {{ report.get_category_display }}
+                    </p>
+
+                    <p>
+                        <strong>Description:</strong>
+                        {{ report.description }}
+                    </p>
+
+                    <p>
+                        <strong>Reported On:</strong>
+                        {{ report.created_at|date:"d M Y" }}
+                    </p>
+
+                    {% if report.photo %}
+                        <img class="report-image"
+                             src="{{ report.photo.url }}"
+                             alt="Pollution report photo">
+                    {% endif %}
+
+                    {% if report.is_resolved %}
+                        <span class="status resolved">Resolved</span>
+                    {% else %}
+                        <span class="status pending">Pending</span>
+                    {% endif %}
+
+                </div>
+
+            {% empty %}
+                <p class="empty-message">
+                    No pollution reports submitted yet.
+                </p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Prevention -->
+    <section id="safety" class="section">
+        <div class="section-heading">
+            <span>STAY SAFE</span>
+            <h2>Water Pollution Prevention</h2>
+            <p>Small steps can help protect our water resources.</p>
+        </div>
+
+        <div class="prevention-grid">
+            <div class="prevention-card">🧪
+                <h3>Regular Testing</h3>
+                <p>Test drinking water regularly.</p>
+            </div>
+
+            <div class="prevention-card">🚯
+                <h3>Keep Sources Clean</h3>
+                <p>Do not dump waste into water sources.</p>
+            </div>
+
+            <div class="prevention-card">🚰
+                <h3>Safe Storage</h3>
+                <p>Store drinking water in clean containers.</p>
+            </div>
+
+            <div class="prevention-card">📢
+                <h3>Report Problems</h3>
+                <p>Report sewage leaks and waterlogging.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <h2>💧 JalRakshak</h2>
+        <p>Clean Water, Healthy Life</p>
+        <p>© 2026 JalRakshak | Save Water, Save Life!</p>
+    </footer>
+
+</body>
+</html>
